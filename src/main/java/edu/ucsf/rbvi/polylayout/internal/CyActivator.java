@@ -1,9 +1,10 @@
-package org.cytoscape.myapp.poly_app.internal;
+package edu.ucsf.rbvi.polylayout.internal;
 
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.NetworkTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -12,7 +13,7 @@ import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
-import edu.ucsf.rbvi.polyLayout.internal.tasks.PolyLayoutTaskFactory;
+import edu.ucsf.rbvi.polylayout.internal.tasks.PolyLayoutTaskFactory;
 
 public class CyActivator extends AbstractCyActivator {
 	
@@ -20,24 +21,14 @@ public class CyActivator extends AbstractCyActivator {
 		super();
 	}
 	
-	@Override
+//	@Overrides
 	public void start(BundleContext context) throws Exception {
 		
-		CyLayoutAlgorithmManager layoutManager = getService(context, CyLayoutAlgorithmManager.class);
-		TunableSetter tunableSetter = getService(context, TunableSetter.class);		
-		PolyLayoutTaskFactory polyTF = new PolyLayoutTaskFactory(layoutManager, tunableSetter); //TO DO
-		
-		UndoSupport undo = getService(context, UndoSupport.class);
-		PolyLayout layout = new PolyLayout(undo);
+		CyServiceRegistrar sr = getService(context, CyServiceRegistrar.class);	
+		PolyLayoutTaskFactory polyTF = new PolyLayoutTaskFactory(sr); //TO DO
 		
 		Properties myLayoutProps = new Properties();
 		myLayoutProps.setProperty("preferredMenu","My Layouts");
-		registerService(context, layout, CyLayoutAlgorithm.class, myLayoutProps);
-		
-		Properties applyPolyProps = new Properties();
-		applyPolyProps.setProperty(ServiceProperties.PREFERRED_MENU, "Apps");
-		applyPolyProps.setProperty(ServiceProperties.TITLE, "polyLayout");
-		registerService(context, polyTF, NetworkTaskFactory.class, myLayoutProps);
 			
 	}
 
