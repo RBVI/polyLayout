@@ -28,7 +28,7 @@ public class CyActivator extends AbstractCyActivator {
 		PolyLayoutTaskFactory polyTF = new PolyLayoutTaskFactory(layoutManager, tunableSetter); //TO DO
 		
 		UndoSupport undo = getService(context, UndoSupport.class);
-		MyLayout layout = new MyLayout(undo);
+		PolyLayout layout = new PolyLayout(undo);
 		
 		Properties myLayoutProps = new Properties();
 		myLayoutProps.setProperty("preferredMenu","My Layouts");
