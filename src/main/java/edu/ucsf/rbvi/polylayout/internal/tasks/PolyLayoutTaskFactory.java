@@ -17,16 +17,13 @@ public class PolyLayoutTaskFactory extends AbstractNetworkTaskFactory implements
 	
 	@Override
 	public boolean isReady() {
-		System.out.println("isReady");
-		// (network == null)
-		//	return false;
-		return true;
+		return false;
 	}
+	
 	@Override
 	public boolean isReady(CyNetwork network) {
-		System.out.println("isReady");
-		// (network == null)
-		//	return false;
+		if (network == null)
+			return false;
 		return true;
 	}
 
