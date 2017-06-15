@@ -17,7 +17,7 @@ public class PolyLayoutTaskFactory extends AbstractNetworkTaskFactory implements
 	
 	@Override
 	public boolean isReady() {
-		return false;
+		return true;
 	}
 	
 	@Override
@@ -29,13 +29,13 @@ public class PolyLayoutTaskFactory extends AbstractNetworkTaskFactory implements
 
 	@Override
 	public TaskIterator createTaskIterator() {
-		PolyLayoutTask newTask = new PolyLayoutTask(reg, null);
+		PolyLayoutTunableAndCountingTask newTask = new PolyLayoutTunableAndCountingTask(reg, null);
 		return new TaskIterator(newTask);
 	}
 	
 	@Override
 	public TaskIterator createTaskIterator(CyNetwork network) {
-		PolyLayoutTask newTask = new PolyLayoutTask(reg, network);
+		PolyLayoutTunableAndCountingTask newTask = new PolyLayoutTunableAndCountingTask(reg, network);
 		return new TaskIterator(newTask);
 	}
 }

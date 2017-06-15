@@ -23,7 +23,7 @@ import org.cytoscape.work.Tunable;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
 
-public class PolyLayoutTask extends AbstractNetworkTask 
+public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask 
 {
 	@Tunable (description= "Choose Column: ")
 	public ListSingleSelection<String> columnChoices = null; 
@@ -33,7 +33,7 @@ public class PolyLayoutTask extends AbstractNetworkTask
 	private final CyServiceRegistrar reg;
 	private final CyNetwork network;
 
-	public PolyLayoutTask(final CyServiceRegistrar reg, final CyNetwork network)
+	public PolyLayoutTunableAndCountingTask(final CyServiceRegistrar reg, final CyNetwork network)
 	{
 		super(network);
 		this.reg = reg;
@@ -56,6 +56,23 @@ public class PolyLayoutTask extends AbstractNetworkTask
 
 	@Override
 	public void run(TaskMonitor arg0) {
-
+		String columnName = columnChoices.getSelectedValue();
+		CyTable polyNodeTable = network.getDefaultNodeTable();
+		CyColumn polyChosenColumn = polyNodeTable.getColumn(columnName);
+		List<String> polyColumnAttributes = polyChosenColumn.getValues(String.class);
+		ArrayList<String> polyDifferentAttributes = new ArrayList<String>();
+		
+		for(final String polyAttribute : polyColumnAttributes)//this for loop should make polyDifferentAttributes a list of different attributes from column polyChosenColumn
+		{
+			boolean unique = true;
+			for(final String diffAttribute : polyDifferentAttributes)
+				if(diffAttribute.equals(polyAttribute))
+					unique = false;
+			if(unique == true)
+				polyDifferentAttributes.add(polyAttribute);
+		}
+		/*Another method: */
+		
+		int polyPartitionsNum = polyDifferentAttributes.size();
 	}	
 }
