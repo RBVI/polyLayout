@@ -2,7 +2,9 @@ package edu.ucsf.rbvi.polylayout.internal.tasks;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.cytoscape.model.CyColumn;
@@ -13,7 +15,10 @@ import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.view.layout.AbstractLayoutTask;
 import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.CyNetworkViewFactory;
+import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
@@ -32,6 +37,8 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 
 	private final CyServiceRegistrar reg;
 	private final CyNetwork network;
+	private CyNetworkViewFactory nVF;
+	private CyNetworkViewManager nVM;
 
 	public PolyLayoutTunableAndCountingTask(final CyServiceRegistrar reg, final CyNetwork network)
 	{
@@ -57,22 +64,37 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 	@Override
 	public void run(TaskMonitor arg0) {
 		String columnName = columnChoices.getSelectedValue();
-		CyTable polyNodeTable = network.getDefaultNodeTable();
-		CyColumn polyChosenColumn = polyNodeTable.getColumn(columnName);
-		List<String> polyColumnAttributes = polyChosenColumn.getValues(String.class);
-		ArrayList<String> polyDifferentAttributes = new ArrayList<String>();
 		
-		for(final String polyAttribute : polyColumnAttributes)//this for loop should make polyDifferentAttributes a list of different attributes from column polyChosenColumn
-		{
-			boolean unique = true;
-			for(final String diffAttribute : polyDifferentAttributes)
-				if(diffAttribute.equals(polyAttribute))
-					unique = false;
-			if(unique == true)
-				polyDifferentAttributes.add(polyAttribute);
+		// Get the networkView from CyNetworkViewManager
+		// CyNetworkView nV = nVF.createNetworkView(network);
+	//	nVM.getNetworkViews(network);
+		
+		//Collection<View<CyNode>> nodeViews = nV.getNodeViews();
+		//Collection<CyNetworkView> networkView = nVM.getNetworkViews(network);
+		
+		CyNetworkView networkV = null;
+		for (CyNetworkView v :  nVM.getNetworkViews(network) ) {
+			networkV = v;
+			break;
 		}
-		/*Another method: */
+		ArrayList<Object> categories = new ArrayList<Object>();
+	
+		Map<Object, ArrayList<View<CyNode>>> nodeMap = new HashMap<Object,ArrayList<View<CyNode>>>();
+		Map<Object, Double> sizeMap = new HashMap<Object, Double>();
 		
-		int polyPartitionsNum = polyDifferentAttributes.size();
+		for (View<CyNode> nv: networkV.getNodeViews()) {
+			CyNode node = nv.getModel();
+			double size = nv.getVisualProperty(BasicVisualLexicon.NODE_SIZE);
+			
+			Object cat = network.getRow(node).getRaw(columnName);
+			if (sizeMap.containsKey(cat)) {
+				sizeMap.put(cat, size + sizeMap.get(cat) + spacing); 
+			}
+			else {
+				sizeMap.put(cat, size);
+				nodeMap.put(cat, new ArrayList<View<CyNode>>());
+			}
+			nodeMap.get(cat).add(nv);
+		}
 	}	
 }
