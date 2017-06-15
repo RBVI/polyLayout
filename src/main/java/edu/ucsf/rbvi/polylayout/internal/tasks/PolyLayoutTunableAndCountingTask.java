@@ -24,6 +24,9 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.undo.UndoSupport;
 import org.cytoscape.work.util.ListSingleSelection;
+
+import edu.ucsf.rbvi.polylayout.internal.model.PolyLayoutAlgorithm;
+
 import org.cytoscape.work.Tunable;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
@@ -66,11 +69,6 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 		String columnName = columnChoices.getSelectedValue();
 		
 		// Get the networkView from CyNetworkViewManager
-		// CyNetworkView nV = nVF.createNetworkView(network);
-	//	nVM.getNetworkViews(network);
-		
-		//Collection<View<CyNode>> nodeViews = nV.getNodeViews();
-		//Collection<CyNetworkView> networkView = nVM.getNetworkViews(network);
 		
 		CyNetworkView networkV = null;
 		for (CyNetworkView v :  nVM.getNetworkViews(network) ) {
@@ -79,7 +77,7 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 		}
 		ArrayList<Object> categories = new ArrayList<Object>();
 	
-		Map<Object, ArrayList<View<CyNode>>> nodeMap = new HashMap<Object,ArrayList<View<CyNode>>>();
+		Map<Object, List<View<CyNode>>> nodeMap = new HashMap<Object,List<View<CyNode>>>();
 		Map<Object, Double> sizeMap = new HashMap<Object, Double>();
 		
 		for (View<CyNode> nv: networkV.getNodeViews()) {
@@ -96,5 +94,7 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 			}
 			nodeMap.get(cat).add(nv);
 		}
+		
+		PolyLayoutAlgorithm.doLayout(sizeMap, nodeMap, reg, networkV, spacing);
 	}	
 }
