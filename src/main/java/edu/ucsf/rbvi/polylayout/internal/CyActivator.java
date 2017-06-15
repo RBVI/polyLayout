@@ -23,13 +23,15 @@ public class CyActivator extends AbstractCyActivator {
 	
 //	@Overrides
 	public void start(BundleContext context) throws Exception {
-		
 		CyServiceRegistrar sr = getService(context, CyServiceRegistrar.class);	
 		PolyLayoutTaskFactory polyTF = new PolyLayoutTaskFactory(sr); //TO DO
 		
 		Properties myLayoutProps = new Properties();
-		myLayoutProps.setProperty("preferredMenu","My Layouts");
-			
-	}
+		myLayoutProps.setProperty(ServiceProperties.PREFERRED_MENU,"Apps");
+		myLayoutProps.setProperty(ServiceProperties.TITLE, "polyLayout");
+		myLayoutProps.setProperty(ServiceProperties.IN_MENU_BAR, "TRUE");
+		myLayoutProps.setProperty(ServiceProperties.ENABLE_FOR, "networkAndView");
+		registerService(context, polyTF, TaskFactory.class, myLayoutProps);
 
+	}
 }
