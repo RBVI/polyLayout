@@ -9,14 +9,11 @@ import java.util.Set;
 
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNetworkFactory;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.view.layout.AbstractLayoutTask;
 import org.cytoscape.view.model.CyNetworkView;
-import org.cytoscape.view.model.CyNetworkViewFactory;
-import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.work.AbstractTask;
@@ -31,7 +28,7 @@ import org.cytoscape.work.Tunable;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.subnetwork.CyRootNetwork;
 
-public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask 
+public class PolyLayoutTunableAndCountingTask extends AbstractTask 
 {
 	@Tunable (description= "Choose Column: ")
 	public ListSingleSelection<String> columnChoices = null; 
@@ -39,16 +36,19 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 	public int spacing = 10; 
 
 	private final CyServiceRegistrar reg;
+	private final CyNetworkView networkView;
 	private final CyNetwork network;
-	private CyNetworkViewFactory nVF;
-	private CyNetworkViewManager nVM;
 
-	public PolyLayoutTunableAndCountingTask(final CyServiceRegistrar reg, final CyNetwork network)
+	public PolyLayoutTunableAndCountingTask(final CyServiceRegistrar reg, final CyNetworkView networkView)
 	{
-		super(network);
 		this.reg = reg;
-		this.network = network;
-		this.nVM = reg.getService(CyNetworkViewManager.class);
+		this.networkView = networkView;
+		if (networkView == null) {
+			columnChoices = new ListSingleSelection<String>();
+			this.network = null;
+			return;
+		}
+		this.network = networkView.getModel();
 
 		CyTable nodeTable = network.getDefaultNodeTable();
 		Collection<CyColumn> columnsCollection = nodeTable.getColumns();
@@ -58,8 +58,8 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 			String name = column.getName();
 			if (name.equals(CyNetwork.SUID) ||
 					name.equals(CyNetwork.NAME) ||
-					name.equals(CyRootNetwork.SHARED_NAME) || 
-					name.equals(CyNetwork.SELECTED))
+					name.equals(CyNetwork.SELECTED) ||
+					name.equals(CyRootNetwork.SHARED_NAME))
 				continue;
 			columnsNames.add(column.getName());
 		}
@@ -70,19 +70,12 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 	public void run(TaskMonitor arg0) {
 		String columnName = columnChoices.getSelectedValue();
 		
-		// Get the networkView from CyNetworkViewManager
-		
-		CyNetworkView networkV = null;
-		for (CyNetworkView v :  nVM.getNetworkViews(network) ) {
-			networkV = v;
-			break;
-		}
 		ArrayList<Object> categories = new ArrayList<Object>();
 	
 		Map<Object, List<View<CyNode>>> nodeMap = new HashMap<Object,List<View<CyNode>>>();
 		Map<Object, Double> sizeMap = new HashMap<Object, Double>();
 		
-		for (View<CyNode> nv: networkV.getNodeViews()) {
+		for (View<CyNode> nv: networkView.getNodeViews()) {
 			CyNode node = nv.getModel();
 			double size = nv.getVisualProperty(BasicVisualLexicon.NODE_SIZE);
 			
@@ -97,6 +90,6 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 			nodeMap.get(cat).add(nv);
 		}
 		
-		PolyLayoutAlgorithm.doLayout(sizeMap, nodeMap, reg, networkV, spacing);
+		PolyLayoutAlgorithm.doLayout(sizeMap, nodeMap, reg, networkView, spacing);
 	}	
 }
