@@ -20,21 +20,23 @@ public class PolyLayoutAlgorithm {
 			if(sizeMap.size() != 2)
 				return;
 			else {
-				Collection<View<CyNode>> collecOfNodes = networkView.getNodeViews();
-				double x = 0;
+				//Collection<View<CyNode>> collecOfNodes = networkView.getNodeViews();
+				Double x = 0.0;
 				for(Object categoryKey : nodeMap.keySet()) {
 					List<View<CyNode>> nodesInCategory = nodeMap.get(categoryKey);
-					double y = 0;
-					double yOffSet = 0;
+					Double y = 0.0;
+					Double yOffSet = 0.0;
 					for(View<CyNode> nodeView : nodesInCategory) {
 						y += yOffSet;
 						nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 						nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y + nodeView.getVisualProperty(BasicVisualLexicon.NODE_SIZE));
 						yOffSet = spacing + nodeView.getVisualProperty(BasicVisualLexicon.NODE_SIZE);
 					}
-					x += 200;
+					x += 200.0;
 				}
 			}
+			networkView.fitContent();
+			networkView.updateView();
 		}
 	}
 }

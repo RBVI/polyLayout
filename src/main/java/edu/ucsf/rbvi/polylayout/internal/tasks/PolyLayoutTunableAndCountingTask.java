@@ -48,6 +48,7 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 		super(network);
 		this.reg = reg;
 		this.network = network;
+		this.nVM = reg.getService(CyNetworkViewManager.class);
 
 		CyTable nodeTable = network.getDefaultNodeTable();
 		Collection<CyColumn> columnsCollection = nodeTable.getColumns();
@@ -57,7 +58,8 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 			String name = column.getName();
 			if (name.equals(CyNetwork.SUID) ||
 					name.equals(CyNetwork.NAME) ||
-					name.equals(CyRootNetwork.SHARED_NAME))
+					name.equals(CyRootNetwork.SHARED_NAME) || 
+					name.equals(CyNetwork.SELECTED))
 				continue;
 			columnsNames.add(column.getName());
 		}
