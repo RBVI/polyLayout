@@ -4,6 +4,7 @@ import java.util.Properties;
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.service.util.CyServiceRegistrar;
+import org.cytoscape.task.NetworkTaskFactory;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
@@ -29,6 +30,6 @@ public class CyActivator extends AbstractCyActivator {
 		myLayoutProps.setProperty(ServiceProperties.PREFERRED_MENU,"Apps.polyLayout");
 		myLayoutProps.setProperty(ServiceProperties.TITLE, "polyLayout");
 		myLayoutProps.setProperty(ServiceProperties.IN_MENU_BAR, "TRUE");
-		registerService(context, polyTF, NetworkViewTaskFactory.class, myLayoutProps);
+		registerService(context, polyTF, NetworkTaskFactory.class, myLayoutProps);
 	}
 }

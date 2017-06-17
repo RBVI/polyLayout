@@ -25,13 +25,12 @@ public class PolyLayoutAlgorithm {
 				double size = 0;
 				for(Object categoryKey : nodeMap.keySet()) {
 					List<View<CyNode>> nodesInCategory = nodeMap.get(categoryKey);
-					double y = size - sizeMap.get(categoryKey)/2;
-					// size = sizeMap.get(categoryKey)/2;
+					double y = size - sizeMap.get(categoryKey) / 2;
 					for(View<CyNode> nodeView : nodesInCategory) {
-						y += nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT)/2.0;
+						y += nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) / 2.0;
 						nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 						nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
-						y += spacing + nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT)/2.0;
+						y += spacing + nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) / 2.0;
 					}
 					x += 1000;
 				}
