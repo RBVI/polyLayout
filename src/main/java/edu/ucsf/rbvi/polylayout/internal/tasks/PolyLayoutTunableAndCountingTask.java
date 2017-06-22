@@ -30,11 +30,10 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 	@Tunable (description= "Choose Column: ")
 	public ListSingleSelection<String> columnChoices = null; 
 	@Tunable (description= "Choose spacing: ")
-	public int spacing = 10; 
+	public Double spacing = 50.0; 
 
 	private final CyServiceRegistrar reg;
 	private final CyNetwork network;
-	private CyNetworkViewFactory nVF;
 	private CyNetworkViewManager nVM;
 
 	public PolyLayoutTunableAndCountingTask(final CyServiceRegistrar reg, final CyNetwork network)
