@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.awt.geom.Point2D;
 
 import org.cytoscape.model.CyNode;
 import org.cytoscape.service.util.CyServiceRegistrar;
@@ -11,15 +12,10 @@ import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 
-import edu.ucsf.rbvi.polylayout.internal.tasks.Coordinates;
-
 public class PolyLayoutAlgorithm {	
-	private static ArrayList<Coordinates> criticalPoints;
-
 	public static void doLayout(Map<Object, Double> sizeMap, 
 			Map<Object, List<View<CyNode>>> nodeMap, 
 			CyServiceRegistrar reg, CyNetworkView networkView, final Double spacing) {
-		criticalPoints = new ArrayList<Coordinates>();
 		if(sizeMap == null || nodeMap == null || networkView == null)
 			return;
 		else {
@@ -53,17 +49,23 @@ public class PolyLayoutAlgorithm {
 			Map<Object, List<View<CyNode>>> nodeMap, 
 			CyServiceRegistrar reg, Collection<View<CyNode>> collecOfNodes, final Double spacing) {
 		Double maxSideLength = getMax(sizeMap, nodeMap, spacing);
-		Double angle = findSideAngle(sizeMap.size()) * 3.1415 / 180;
 
 		int groupCounter = 1;
+		int[] angleCounter = new int[1];
+		List<Point2D> criticalPoints = new ArrayList<Point2D>();
+		
 		for(Object categoryKey : nodeMap.keySet()) {
 			if(groupCounter < 100) { 
+				Double angle = findSideAngle(sizeMap.size());
 				Double differenceSpacing = 0.0;
 				if(nodeMap.get(categoryKey).size() - 1 != 0)
 					differenceSpacing = (maxSideLength - sizeMap.get(categoryKey)) / (nodeMap.get(categoryKey).size() - 1);
 				else
 					differenceSpacing = (maxSideLength - sizeMap.get(categoryKey)) / 2;
-				printPolygon(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, differenceSpacing);
+				angle = angle + (angleCounter[0] * (angle - 3.1415));
+				angle = Math.abs(angle);
+				System.out.println(groupCounter + " : " + angle + " : " + angleCounter[0]);
+				printPolygon(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, differenceSpacing, angleCounter, criticalPoints);
 				groupCounter++;
 			}
 			else 
@@ -72,7 +74,7 @@ public class PolyLayoutAlgorithm {
 	}
 
 	private static Double findSideAngle(int size) {
-		return (180.0 * (size - 2)) / size;
+		return (180.0 * (size - 2)) / size * 3.1415 / 180;//in radians
 	}
 	
 	private static Double getMax(Map<Object, Double> sizeMap, Map<Object, List<View<CyNode>>> nodeMap, final Double spacing) {
@@ -85,76 +87,81 @@ public class PolyLayoutAlgorithm {
 				maxSize = size;
 			}
 		}
-		maxSize += spacing * nodeMap.get(categKey).size();
 		if(categKey != null)
 			return maxSize;
-		else {
-			System.out.println("ooooh");
-			return -1.0;
-		}
+		return -1.0;
 	}
 
 	private static void printPolygon(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, int groupCounter, Double angle, Double differenceSpacing) { 
+			Double maxSideLength, final Double spacing, int groupCounter, Double angle, Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) { 
 		int numOfSides = nodeMap.size();
 		if(groupCounter == 1) {
-			printBottomHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing);
+			angleCounter[0] = 0;
+			printBottomHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, criticalPoints);
 			return;
 		}
 		switch(numOfSides % 4) {
 		case 0:
 			if(groupCounter > 1 && groupCounter < (numOfSides / 4) + 1) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter == (numOfSides / 4) + 1) 
-				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, 1, differenceSpacing);
+				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter == (numOfSides / 2) + 1) 
-				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing);
-			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter < (3 * numOfSides / 4.0) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
-			else if(groupCounter == (3 * numOfSides / 4) + 1) 
-				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, -1, differenceSpacing);
+				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, angleCounter, criticalPoints);
+			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter < (3 * numOfSides / 4.0) + 1)  
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
+			else if(groupCounter == (3 * numOfSides / 4) + 1)
+				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, -1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
 		case 1:
 			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);		
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
 			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
 		case 2:
 			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);		
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
 			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter == (numOfSides / 2) + 1) 
-				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing);
+				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
 		case 3:
 			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);		
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
 			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
-				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
-				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing);
+				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
 		}
 	}
 
+	private static void incrementAngleCounter(int[] angleCounter) {
+		angleCounter[0]++;
+	}
+	
+	private static void resetAngleCounter(int[] angleCounter) {
+		angleCounter[0] = 0;
+	}
+	
 	private static void printBottomHorizontal(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, Double differenceSpacing) {
+			Double maxSideLength, final Double spacing, Double differenceSpacing, List<Point2D> criticalPoints) {
 		Double x = 0.0;
 		Double lastNodeViewHeight = 0.0;
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
@@ -163,12 +170,12 @@ public class PolyLayoutAlgorithm {
 			x = x - nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) - (spacing) - differenceSpacing - lastNodeViewHeight;
 			lastNodeViewHeight = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 		}
-		x += differenceSpacing;
-		criticalPoints.add(new Coordinates(x - 5 * spacing, 0.0));
+		x += differenceSpacing + spacing;
+		criticalPoints.add(new Point2D.Double(x - 5 * spacing, 0.0));
 	}
 
 	private static void printTopHorizontal(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, Double differenceSpacing) {
+			Double maxSideLength, final Double spacing, Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) {
 		Double x = criticalPoints.get(criticalPoints.size() - 1).getX();
 		Double y = criticalPoints.get(criticalPoints.size() - 1).getY();
 		x += spacing * 5;
@@ -180,11 +187,13 @@ public class PolyLayoutAlgorithm {
 			lastNodeViewHeight = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 		}
 		x -= differenceSpacing;
-		criticalPoints.add(new Coordinates(x + 5 * spacing, y));
+		resetAngleCounter(angleCounter);
+		criticalPoints.add(new Point2D.Double(x + 5 * spacing, y));
 	}
 
 	private static void printBottomDiagonal(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, int groupCounter, Double angle, int isOnLeftSideOfShape, Double differenceSpacing) {
+			Double maxSideLength, final Double spacing, int groupCounter, Double angle, int isOnLeftSideOfShape, 
+			Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) {
 		if(isOnLeftSideOfShape != -1 && isOnLeftSideOfShape != 1)
 			return;
 
@@ -219,11 +228,13 @@ public class PolyLayoutAlgorithm {
 		Double startX = x - 5 * spacing * Math.abs(Math.cos(angle));
 		Double startY = y - isOnLeftSideOfShape * (5 * spacing * Math.abs(Math.sin(angle)));
 		
-		criticalPoints.add(new Coordinates(startX, startY));
+		incrementAngleCounter(angleCounter);
+		criticalPoints.add(new Point2D.Double(startX, startY));
 	}
 
 	private static void printTopDiagonal(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, int groupCounter, Double angle, int isOnLeftSideOfShape, Double differenceSpacing) {//isOnLeftSideOfShape is 1 if on left, -1 if on right
+			Double maxSideLength, final Double spacing, int groupCounter, Double angle, int isOnLeftSideOfShape, 
+			Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) {//isOnLeftSideOfShape is 1 if on left, -1 if on right
 		if(isOnLeftSideOfShape != -1 && isOnLeftSideOfShape != 1)
 			return;
 
@@ -258,11 +269,13 @@ public class PolyLayoutAlgorithm {
 		Double startX = x + 5 * spacing * Math.abs(Math.cos(angle));
 		Double startY = y - isOnLeftSideOfShape * (5 * spacing * Math.abs(Math.sin(angle)));
 		
-		criticalPoints.add(new Coordinates(startX, startY));
+		incrementAngleCounter(angleCounter);
+		criticalPoints.add(new Point2D.Double(startX, startY));
 	}
 
 	private static void printVertical(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, int groupCounter, int isOnLeftSideOfShape, Double differenceSpacing) {
+			Double maxSideLength, final Double spacing, int groupCounter, int isOnLeftSideOfShape, 
+			Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) {
 		if(isOnLeftSideOfShape != -1 && isOnLeftSideOfShape != 1)
 			return;
 
@@ -288,7 +301,9 @@ public class PolyLayoutAlgorithm {
 
 		y += isOnLeftSideOfShape * (differenceSpacing);
 		Double startY = y - (isOnLeftSideOfShape * 5 * spacing);
-		criticalPoints.add(new Coordinates(x, startY));
+		
+		resetAngleCounter(angleCounter);
+		criticalPoints.add(new Point2D.Double(x, startY));
 	}
 
 	private static void printNothing(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
@@ -297,6 +312,5 @@ public class PolyLayoutAlgorithm {
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, 200);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, 200);
 		}
-		System.out.println("oooooooooooooooooooooooooooooooooooooooo");
 	}
 }

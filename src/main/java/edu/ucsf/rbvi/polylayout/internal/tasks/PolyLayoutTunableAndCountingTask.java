@@ -12,7 +12,6 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.service.util.CyServiceRegistrar;
 import org.cytoscape.task.AbstractNetworkTask;
 import org.cytoscape.view.model.CyNetworkView;
-import org.cytoscape.view.model.CyNetworkViewFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
@@ -70,15 +69,13 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 			networkV = v;
 			break;
 		}
-		
-		ArrayList<Object> categories = new ArrayList<Object>();
-	
+			
 		Map<Object, List<View<CyNode>>> nodeMap = new HashMap<Object,List<View<CyNode>>>();
 		Map<Object, Double> sizeMap = new HashMap<Object, Double>();
 		
 		for (View<CyNode> nv: networkV.getNodeViews()) {
 			CyNode node = nv.getModel();
-			double size = nv.getVisualProperty(BasicVisualLexicon.NODE_SIZE);
+			double size = nv.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 			
 			Object cat = network.getRow(node).getRaw(columnName);
 			if (sizeMap.containsKey(cat)) {
