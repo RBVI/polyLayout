@@ -49,8 +49,6 @@ public class PolyLayoutAlgorithm {
 			Map<Object, List<View<CyNode>>> nodeMap, 
 			CyServiceRegistrar reg, Collection<View<CyNode>> collecOfNodes, final Double spacing) {
 		Double maxSideLength = getMax(sizeMap, nodeMap, spacing);
-
-		System.out.println(maxSideLength + " is the max side length");
 		
 		int groupCounter = 1;
 		int[] angleCounter = new int[1];
@@ -234,7 +232,6 @@ public class PolyLayoutAlgorithm {
 
 		Double x = criticalPoints.get(criticalPoints.size() - 1).getX();
 		Double y = criticalPoints.get(criticalPoints.size() - 1).getY();
-		System.out.println("Before: " + " (" + x + "," + y + ")");
 		Double changeX = 0.0;
 		Double changeY = 0.0;
 		Double changeVector = 0.0;
