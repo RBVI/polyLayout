@@ -29,7 +29,7 @@ public class PolyLayoutAlgorithm {
 
 	private static void doLengthTwo(Map<Object, Double> sizeMap, 
 			Map<Object, List<View<CyNode>>> nodeMap, 
-			CyServiceRegistrar reg, Collection<View<CyNode>> collecOfNodes, final Double spacing) {
+			CyServiceRegistrar reg, Collection<View<CyNode>> collecOfNodes, final Double spacing) { //for n = 2, where n is number of sides/groups
 		double x = 0;
 		double size = 0;
 		for(Object categoryKey : nodeMap.keySet()) {
@@ -50,6 +50,8 @@ public class PolyLayoutAlgorithm {
 			CyServiceRegistrar reg, Collection<View<CyNode>> collecOfNodes, final Double spacing) {
 		Double maxSideLength = getMax(sizeMap, nodeMap, spacing);
 
+		System.out.println(maxSideLength + " is the max side length");
+		
 		int groupCounter = 1;
 		int[] angleCounter = new int[1];
 		List<Point2D> criticalPoints = new ArrayList<Point2D>();
@@ -58,23 +60,21 @@ public class PolyLayoutAlgorithm {
 			if(groupCounter < 100) { 
 				Double angle = findSideAngle(sizeMap.size());
 				Double differenceSpacing = 0.0;
-				if(nodeMap.get(categoryKey).size() - 1 != 0)
-					differenceSpacing = (maxSideLength - sizeMap.get(categoryKey)) / (nodeMap.get(categoryKey).size() - 1);
+				if(nodeMap.get(categoryKey).size() - 1 != 0) {
+					differenceSpacing = (maxSideLength - sizeMap.get(categoryKey)) / (nodeMap.get(categoryKey).size() + 1);
+				}
 				else
 					differenceSpacing = (maxSideLength - sizeMap.get(categoryKey)) / 2;
 				angle = angle + (angleCounter[0] * (angle - 3.1415));
 				angle = Math.abs(angle);
-				System.out.println(groupCounter + " : " + angle + " : " + angleCounter[0]);
 				printPolygon(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, differenceSpacing, angleCounter, criticalPoints);
 				groupCounter++;
 			}
-			else 
-				printNothing(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, 1, 0.0);
 		}
 	}
 
 	private static Double findSideAngle(int size) {
-		return (180.0 * (size - 2)) / size * 3.1415 / 180;//in radians
+		return (180.0 * (size - 2)) / size * 3.1415 / 180;//each corner angle in radians
 	}
 	
 	private static Double getMax(Map<Object, Double> sizeMap, Map<Object, List<View<CyNode>>> nodeMap, final Double spacing) {
@@ -95,58 +95,58 @@ public class PolyLayoutAlgorithm {
 	private static void printPolygon(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
 			Double maxSideLength, final Double spacing, int groupCounter, Double angle, Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) { 
 		int numOfSides = nodeMap.size();
-		if(groupCounter == 1) {
+		if(groupCounter == 1) {//first side
 			angleCounter[0] = 0;
 			printBottomHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, criticalPoints);
 			return;
 		}
-		switch(numOfSides % 4) {
-		case 0:
-			if(groupCounter > 1 && groupCounter < (numOfSides / 4) + 1) 
+		switch(numOfSides % 4) {//different types of shapes behave differently
+		case 0://shapes that are evenly divisible by 4 i.e. 4, 8, 12, 16 sides
+			if(groupCounter > 1 && groupCounter < (numOfSides / 4) + 1)//when the side is in the bottom left hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter == (numOfSides / 4) + 1) 
+			else if(groupCounter == (numOfSides / 4) + 1) //when the side is the vertically left part of the shape
 				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) 
+			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) //when the side is in the upper left hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter == (numOfSides / 2) + 1) 
+			else if(groupCounter == (numOfSides / 2) + 1) //when the side is in the top horizontal part of the shape
 				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter < (3 * numOfSides / 4.0) + 1)  
+			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter < (3 * numOfSides / 4.0) + 1) //when the side is in the top right hand side of the shape  
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter == (3 * numOfSides / 4) + 1)
+			else if(groupCounter == (3 * numOfSides / 4) + 1) //when the side is in the vertically right part of the shape
 				printVertical(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, -1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
+			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) //when the side is in the bottom right hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
-		case 1:
-			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
+		case 1://shapes that, when divided by 4, have a remainder of 1 i.e. 5, 9, 13, 17
+			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) //when the side is in the bottom left hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
-			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) 
+			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) //when the side is in the upper left hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
+			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) //when the side is in the top right hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
+			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) //when the side is in the bottom right hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
-		case 2:
-			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
+		case 2://shapes that, when divided by 4, have a remainder of 2 i.e. 6, 10, 14, 18
+			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) //when the side is in the bottom left hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
-			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) 
+			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter < (numOfSides / 2) + 1) //when the side is in the upper left hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter == (numOfSides / 2) + 1) 
+			else if(groupCounter == (numOfSides / 2) + 1) //when the side is in the top horizontal part of the shape 
 				printTopHorizontal(nodeMap, categoryKey, maxSideLength, spacing, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
+			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1)  //when the side is in the top right hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
+			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) //when the side is in the bottom right hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
-		case 3:
-			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) 
+		case 3://shapes that, when divided by 4, have a remainder of 3 i.e. 7, 11, 15, 19
+			if(groupCounter > 1 && groupCounter <= ((numOfSides / 4)) + 1) //when the side is in the bottom left hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);		
-			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) 
+			else if(groupCounter > (numOfSides / 4) + 1 && groupCounter <= (numOfSides / 2) + 1) //when the side is in the upper left hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, 1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1) 
+			else if(groupCounter > (numOfSides / 2) + 1 && groupCounter <= (3 * numOfSides / 4) + 1)  //when the side is in the top right hand side of the shape
 				printTopDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
-			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) 
+			else if(groupCounter > (3 * numOfSides / 4) + 1 && groupCounter <= numOfSides) //when the side is in the bottom right hand side of the shape
 				printBottomDiagonal(nodeMap, categoryKey, maxSideLength, spacing, groupCounter, angle, -1, differenceSpacing, angleCounter, criticalPoints);
 			break;
 		}
@@ -164,21 +164,21 @@ public class PolyLayoutAlgorithm {
 			Double maxSideLength, final Double spacing, Double differenceSpacing, List<Point2D> criticalPoints) {
 		Double x = 0.0;
 		Double lastNodeViewHeight = 0.0;
+		x -= differenceSpacing;
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, 0.0);
 			x = x - nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) - (spacing) - differenceSpacing - lastNodeViewHeight;
 			lastNodeViewHeight = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 		}
-		x += differenceSpacing + spacing;
-		criticalPoints.add(new Point2D.Double(x - 5 * spacing, 0.0));
+		criticalPoints.add(new Point2D.Double(x - 5 * spacing, -1 * 5 * spacing));
 	}
 
 	private static void printTopHorizontal(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
 			Double maxSideLength, final Double spacing, Double differenceSpacing, int[] angleCounter, List<Point2D> criticalPoints) {
 		Double x = criticalPoints.get(criticalPoints.size() - 1).getX();
 		Double y = criticalPoints.get(criticalPoints.size() - 1).getY();
-		x += spacing * 5;
+		x += spacing * 5 + differenceSpacing;
 		Double lastNodeViewHeight = 0.0;
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
@@ -186,7 +186,6 @@ public class PolyLayoutAlgorithm {
 			x = x + nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) + (spacing) + differenceSpacing + lastNodeViewHeight;
 			lastNodeViewHeight = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 		}
-		x -= differenceSpacing;
 		resetAngleCounter(angleCounter);
 		criticalPoints.add(new Point2D.Double(x + 5 * spacing, y));
 	}
@@ -199,34 +198,29 @@ public class PolyLayoutAlgorithm {
 
 		Double x = criticalPoints.get(criticalPoints.size() - 1).getX();
 		Double y = criticalPoints.get(criticalPoints.size() - 1).getY();
-		System.out.println("Before: " + " (" + x + "," + y + ")");
 		Double changeX = 0.0;
 		Double changeY = 0.0;
 		Double changeVector = 0.0;
-
-		System.out.println("angle: " + angle);
 
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
 			changeVector = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) + spacing + differenceSpacing;
 			changeX = Math.abs(changeVector * Math.cos(angle));
 			changeY = isOnLeftSideOfShape * Math.abs(changeVector * Math.sin(angle));
-			System.out.println("changeVector: " + changeVector + " changeX: " + changeX + " changeY: " + changeY);
 			break;
 		}
 		
-		x = x - 5 * spacing * Math.abs(Math.cos(angle));
-		y = y - isOnLeftSideOfShape * (5 * spacing * Math.abs(Math.sin(angle)));
+		x = x - (5 * spacing + differenceSpacing) * Math.abs(Math.cos(angle));
+		y = y - isOnLeftSideOfShape * ((5 * spacing + differenceSpacing) * Math.abs(Math.sin(angle)));
 
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
-			System.out.println("After: " + nodeView.getModel().toString() + " (" + x + "," + y + ")");
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
 			x -= changeX;
 			y -= changeY;
 		}
 
-		Double startX = x - 5 * spacing * Math.abs(Math.cos(angle));
-		Double startY = y - isOnLeftSideOfShape * (5 * spacing * Math.abs(Math.sin(angle)));
+		Double startX = x - 4 * spacing * Math.abs(Math.cos(angle));
+		Double startY = y - isOnLeftSideOfShape * (4 * spacing * Math.abs(Math.sin(angle)));
 		
 		incrementAngleCounter(angleCounter);
 		criticalPoints.add(new Point2D.Double(startX, startY));
@@ -245,21 +239,18 @@ public class PolyLayoutAlgorithm {
 		Double changeY = 0.0;
 		Double changeVector = 0.0;
 
-		System.out.println("angle: " + angle);
-
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) { 
 			changeVector = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) + spacing + differenceSpacing;
 			changeX = Math.abs(changeVector * Math.cos(angle));
 			changeY = isOnLeftSideOfShape * Math.abs(changeVector * Math.sin(angle));
-			System.out.println("changeVector: " + changeVector + " changeX: " + changeX + " changeY: " + changeY);
 			break;
 		}
 		
-		x = x + 5 * spacing * Math.abs(Math.cos(angle));
-		y = y - isOnLeftSideOfShape * (5 * spacing * Math.abs(Math.sin(angle)));
+		x = x + (5 * spacing + differenceSpacing) * Math.abs(Math.cos(angle));
+		y = y - isOnLeftSideOfShape * ((5 * spacing + differenceSpacing) * Math.abs(Math.sin(angle)));
 
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
-			System.out.println("After: " + nodeView.getModel().toString() + " (" + x + "," + y + ")");
+
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
 			x += changeX;
@@ -281,7 +272,7 @@ public class PolyLayoutAlgorithm {
 
 		Double x = criticalPoints.get(criticalPoints.size() - 1).getX();
 		Double y = criticalPoints.get(criticalPoints.size() - 1).getY();
-		y -= (isOnLeftSideOfShape * 5 * spacing);
+		y -= (isOnLeftSideOfShape * (5 * spacing + differenceSpacing));
 		Double lastNodeViewHeight = 0.0;
 		
 		if(isOnLeftSideOfShape == 1)
@@ -299,18 +290,9 @@ public class PolyLayoutAlgorithm {
 				lastNodeViewHeight = nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 			}
 
-		y += isOnLeftSideOfShape * (differenceSpacing);
 		Double startY = y - (isOnLeftSideOfShape * 5 * spacing);
 		
 		resetAngleCounter(angleCounter);
 		criticalPoints.add(new Point2D.Double(x, startY));
-	}
-
-	private static void printNothing(Map<Object, List<View<CyNode>>> nodeMap, Object categoryKey, 
-			Double maxSideLength, final Double spacing, int groupCounter, int isOnLeftSideOfShape, Double differenceSpacing) {
-		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, 200);
-			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, 200);
-		}
 	}
 }
