@@ -1,5 +1,6 @@
 package edu.ucsf.rbvi.polylayout.internal.tasks;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -71,23 +72,16 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 		}
 			
 		Map<Object, List<View<CyNode>>> nodeMap = new HashMap<Object,List<View<CyNode>>>();
-		Map<Object, Double> sizeMap = new HashMap<Object, Double>();
-		
+		Map<Object, Point2D> sizeMap = new HashMap<Object, Point2D>();
+			
 		for (View<CyNode> nv: networkV.getNodeViews()) {
 			CyNode node = nv.getModel();
-			double size = nv.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT);
 			
 			Object cat = network.getRow(node).getRaw(columnName);
-			if (sizeMap.containsKey(cat)) {
-				sizeMap.put(cat, size + sizeMap.get(cat) + spacing); 
-			}
-			else {
-				sizeMap.put(cat, size);
+			if(!nodeMap.containsKey(cat)) 
 				nodeMap.put(cat, new ArrayList<View<CyNode>>());
-			}
 			nodeMap.get(cat).add(nv);
 		}
-		
-		PolyLayoutAlgorithm.doLayout(sizeMap, nodeMap, reg, networkV, spacing);
+		PolyLayoutAlgorithm.doLayout(nodeMap, reg, networkV, spacing);
 	}	
 }
