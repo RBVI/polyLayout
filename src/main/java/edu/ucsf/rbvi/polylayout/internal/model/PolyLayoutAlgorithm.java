@@ -1,7 +1,6 @@
 package edu.ucsf.rbvi.polylayout.internal.model;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,10 +48,7 @@ public class PolyLayoutAlgorithm {
 		double angle = 0; 
 		
 		for(Object categoryKey : nodeMap.keySet()) {
-			System.out.println("This category is... " + categoryKey);
-			System.out.println("The angle is... " + angle * 180 / 3.1415);
 			final int quadraint = (int) (angle / (totalDegree / 4.0)) + 1;
-			System.out.println("The quadraint is... " + quadraint);
 			doShape(nodeMap, sizeMap, categoryKey, maxSideLength, spacing, angle, criticalPoints, quadraint);
 			angle += findSideAngle(nodeMap.size());
 		}
@@ -68,12 +64,10 @@ public class PolyLayoutAlgorithm {
 		double thisSideLength = getSideLength(sizeMap, categoryKey, angle, null);
 		
 		double differenceSpacing = 0.0;//difference in spacing between this category and the max length category
-		System.out.println((maxSideLength + " is the maxSideLength, " + (thisSideLength + spacing * (nodeMap.get(categoryKey).size() - 1))) + " is thisSideLength");
 		if(nodeMap.get(categoryKey).size() - 1 != 0) 
 			differenceSpacing = (maxSideLength - (thisSideLength + spacing * (nodeMap.get(categoryKey).size() - 1))) / (nodeMap.get(categoryKey).size() + 1);
 		else
 			differenceSpacing = (maxSideLength - thisSideLength) / 2;
-		System.out.println(categoryKey + "'s difference in spacing is... " + differenceSpacing);
 		return differenceSpacing;
 	}
 
@@ -110,17 +104,17 @@ public class PolyLayoutAlgorithm {
 	private static double getSideLength(Map<Object, Point2D> sizeMap, 
 			Object categoryKey, double angle, View<CyNode> nodeView) {
 		double sideLength = 0.0;
-		double cosAngle = Math.abs(Math.cos(angle));
-		System.out.println(cosAngle + " is the cosAngle");
 		if(nodeView == null) {
-			if(cosAngle >= 0.0005)
-				sideLength = (sizeMap.get(categoryKey).getX()) / cosAngle;
+			if(Math.abs(Math.tan(angle)) <= 0.0005 || (Math.abs(Math.cos(angle)) >= 0.0005 && (Math.abs(Math.tan(angle)) <= 
+					sizeMap.get(categoryKey).getY() / sizeMap.get(categoryKey).getX())))
+				sideLength = (sizeMap.get(categoryKey).getX()) / Math.abs(Math.cos(angle));
 			else
 				sideLength = (sizeMap.get(categoryKey).getY()) / Math.abs(Math.sin(angle));
 		}
 		else {
-			if(cosAngle >= 0.0005)
-				sideLength = (nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH) / 2) / cosAngle;
+			if(Math.abs(Math.tan(angle)) <= 0.0005 || (Math.abs(Math.cos(angle)) >= 0.0005 && (Math.abs(Math.tan(angle)) <= nodeView.getVisualProperty(
+					BasicVisualLexicon.NODE_HEIGHT) / nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH)))) 
+				sideLength = (nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH) / 2) / Math.abs(Math.cos(angle));
 			else
 				sideLength = (nodeView.getVisualProperty(BasicVisualLexicon.NODE_HEIGHT) / 2) / Math.abs(Math.sin(angle));
 		}
@@ -145,32 +139,26 @@ public class PolyLayoutAlgorithm {
 			yCompAngle *= -1;
 		
 		double differenceSpacing = getDifferenceInSpacing(sizeMap, nodeMap, maxSideLength, categoryKey, angle, spacing);
-		double changeX = 0.0;
-		double changeY = 0.0;
-		double changeLastNodeDiagonalDistance = 0.0;
 		double changeVector = spacing + differenceSpacing;
 
-		x = x + (3 * spacing + differenceSpacing) * xCompAngle;
-		y = y + (3 * spacing + differenceSpacing) * yCompAngle;
+		x = x + (3 * spacing) * xCompAngle;
+		y = y + (3 * spacing) * yCompAngle;
 
 		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
 			double nodeDiagonalDistance = getSideLength(sizeMap, categoryKey, angle, nodeView);
-			System.out.print("The node's diagonal distance is " + nodeDiagonalDistance);
 			
-			System.out.println(" and this node is at... (" + x + "," + y + ")");
+			x += (changeVector + nodeDiagonalDistance) * xCompAngle;
+			y += (changeVector + nodeDiagonalDistance) * yCompAngle;
+			
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
 			
-			changeX = (nodeDiagonalDistance + changeVector + changeLastNodeDiagonalDistance) * xCompAngle;
-			changeY = (nodeDiagonalDistance + changeVector + changeLastNodeDiagonalDistance) * yCompAngle;
-			System.out.println(changeX + " is changeX, and changeY is " + changeY);
-			x += changeX;
-			y += changeY;
-			changeLastNodeDiagonalDistance = nodeDiagonalDistance;
+			x += nodeDiagonalDistance * xCompAngle;
+			y += nodeDiagonalDistance * yCompAngle;
 		}
-
-		double startX = x + 3 * spacing * xCompAngle;
-		double startY = y + (3 * spacing * yCompAngle);
+		
+		double startX = x + (3 * spacing + differenceSpacing) * xCompAngle;
+		double startY = y + (3 * spacing + differenceSpacing) * yCompAngle;
 
 		criticalPoints.add(new Point2D.Double(startX, startY));
 	}
