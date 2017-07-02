@@ -27,9 +27,11 @@ import org.cytoscape.model.subnetwork.CyRootNetwork;
 
 public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask 
 {
-	@Tunable (description= "Choose Column: ")
-	public ListSingleSelection<String> columnChoices = null; 
-	@Tunable (description= "Choose spacing: ")
+	@Tunable (description= "Category Column: ")
+	public ListSingleSelection<String> categoryColumn = null; 
+	@Tunable (description= "Sort Column: ")
+	public ListSingleSelection<String> sortColumn = null; 
+	@Tunable (description= "Node spacing: ")
 	public Double spacing = 50.0; 
 
 	private final CyServiceRegistrar reg;
@@ -45,7 +47,7 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 
 		CyTable nodeTable = network.getDefaultNodeTable();
 		Collection<CyColumn> columnsCollection = nodeTable.getColumns();
-		ArrayList<String> columnsNames = new ArrayList<String>();
+		List<String> columnsNames = new ArrayList<String>();
 		for(CyColumn column : columnsCollection)
 		{
 			String name = column.getName();
@@ -56,12 +58,18 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 				continue;
 			columnsNames.add(column.getName());
 		}
-		columnChoices = new ListSingleSelection<String>(columnsNames);//tunable
+		categoryColumn = new ListSingleSelection<String>(columnsNames);//tunable
+
+		List<String> columnNames2 = new ArrayList<String>();
+		columnNames2.add("--None--");
+		columnNames2.addAll(columnsNames);
+		sortColumn = new ListSingleSelection<String>(columnNames2);//tunable
 	}
 
 	@Override
 	public void run(TaskMonitor arg0) {
-		String columnName = columnChoices.getSelectedValue();
+		String columnName = categoryColumn.getSelectedValue();
+		String sortColumnName = sortColumn.getSelectedValue();
 		
 		// Get the networkView from CyNetworkViewManager
 		
@@ -82,6 +90,6 @@ public class PolyLayoutTunableAndCountingTask extends AbstractNetworkTask
 				nodeMap.put(cat, new ArrayList<View<CyNode>>());
 			nodeMap.get(cat).add(nv);
 		}
-		PolyLayoutAlgorithm.doLayout(nodeMap, reg, networkV, spacing);
+		PolyLayoutAlgorithm.doLayout(nodeMap, networkV, spacing, sortColumnName);
 	}	
 }
