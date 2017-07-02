@@ -13,7 +13,8 @@ import org.cytoscape.work.TaskFactory;
 import org.cytoscape.work.TunableSetter;
 import org.cytoscape.work.undo.UndoSupport;
 import org.osgi.framework.BundleContext;
-import edu.ucsf.rbvi.polylayout.internal.tasks.PolyLayoutTaskFactory;
+
+import edu.ucsf.rbvi.polylayout.internal.tasks.PolyCyLayoutAlgorithm;
 
 public class CyActivator extends AbstractCyActivator {
 	
@@ -24,12 +25,10 @@ public class CyActivator extends AbstractCyActivator {
 //	@Overrides
 	public void start(BundleContext context) throws Exception {
 		CyServiceRegistrar sr = getService(context, CyServiceRegistrar.class);	
-		PolyLayoutTaskFactory polyTF = new PolyLayoutTaskFactory(sr); 
-		
-		Properties myLayoutProps = new Properties();
-		myLayoutProps.setProperty(ServiceProperties.PREFERRED_MENU,"Apps.polyLayout");
-		myLayoutProps.setProperty(ServiceProperties.TITLE, "polyLayout");
-		myLayoutProps.setProperty(ServiceProperties.IN_MENU_BAR, "TRUE");
-		registerService(context, polyTF, NetworkTaskFactory.class, myLayoutProps);
+		UndoSupport undoSupport = getService(context, UndoSupport.class);	
+
+		PolyCyLayoutAlgorithm polyAlgorithm = new PolyCyLayoutAlgorithm(sr, undoSupport); 
+		Properties algLayoutProps = new Properties();
+		registerService(context, polyAlgorithm, CyLayoutAlgorithm.class, algLayoutProps);
 	}
 }
