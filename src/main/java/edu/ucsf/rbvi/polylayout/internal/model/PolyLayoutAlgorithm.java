@@ -85,7 +85,11 @@ public class PolyLayoutAlgorithm {
 		
 		for(Object categoryKey : nodeMap.keySet()) {
 			final int quadraint = (int) (angle / (totalDegree / 4.0)) + 1;
-			doShape(nodeMap, sizeMap, categoryKey, maxSideLength, spacing, angle, criticalPoints, quadraint);
+			List<View<CyNode>> nodesInCategory = nodeMap.get(categoryKey);
+			sortList(view, sortColumn, nodesInCategory);
+			Point2D size = sizeMap.get(categoryKey);
+
+			doShape(nodesInCategory, size, maxSideLength, spacing, angle, criticalPoints, quadraint);
 			angle += findSideAngle(nodeMap.size());
 		}
 	}
@@ -94,21 +98,21 @@ public class PolyLayoutAlgorithm {
 		return (180.0 * (size - 2)) / size * 3.1415 / 180;//each corner angle in radians
 	}
 
-	private static Double getDifferenceInSpacing(Map<Object, Point2D> sizeMap, 
-			Map<Object, List<View<CyNode>>> nodeMap, double maxSideLength,  
-			Object categoryKey, double angle, final double spacing) {
-		double thisSideLength = getSideLength(sizeMap, categoryKey, angle, null);
+	private static Double getDifferenceInSpacing(Point2D size, 
+	                                             List<View<CyNode>> nodeViews, double maxSideLength,  
+	                                             double angle, final double spacing) {
+		double thisSideLength = getSideLength(size, angle, null);
 		
 		double differenceSpacing = 0.0;//difference in spacing between this category and the max length category
-		if(nodeMap.get(categoryKey).size() - 1 != 0) 
-			differenceSpacing = (maxSideLength - (thisSideLength + spacing * (nodeMap.get(categoryKey).size() - 1))) / (nodeMap.get(categoryKey).size() + 1);
+		if(nodeViews.size() - 1 != 0) 
+			differenceSpacing = (maxSideLength - (thisSideLength + spacing * (nodeViews.size() - 1))) / (nodeViews.size() + 1);
 		else
 			differenceSpacing = (maxSideLength - thisSideLength) / 2;
 		return differenceSpacing;
 	}
 
-	private static Double getMax(Map<Object, Point2D> sizeMap, Map<Object, 
-			List<View<CyNode>>> nodeMap, final double spacing) {
+	private static Double getMax(Map<Object, Point2D> sizeMap, 
+	                             Map<Object, List<View<CyNode>>> nodeMap, final double spacing) {
 		double maxSize = 0.0;
 		Object categKeyOfMax = null;
 		double angle = 0;
@@ -125,7 +129,7 @@ public class PolyLayoutAlgorithm {
 					sizeMap.put(categoryKey, new Point2D.Double(x, y));
 				}
 			}			
-			double size = getSideLength(sizeMap, categoryKey, angle, null) + (spacing * (nodeMap.get(categoryKey).size() - 1));
+			double size = getSideLength(sizeMap.get(categoryKey), angle, null) + (spacing * (nodeMap.get(categoryKey).size() - 1));
 			if(maxSize < size) {	
 				categKeyOfMax = categoryKey;
 				maxSize = size;
@@ -137,18 +141,20 @@ public class PolyLayoutAlgorithm {
 		return -1.0;
 	}
 	
-	private static double getSideLength(Map<Object, Point2D> sizeMap, 
-			Object categoryKey, double angle, View<CyNode> nodeView) {
+	private static double getSideLength(Point2D size, 
+	                                    double angle, View<CyNode> nodeView) {
 		double sideLength = 0.0;
 		if(nodeView == null) {
 			if(Math.abs(Math.tan(angle)) <= 0.0005 || (Math.abs(Math.cos(angle)) >= 0.0005 && (Math.abs(Math.tan(angle)) <= 
-					sizeMap.get(categoryKey).getY() / sizeMap.get(categoryKey).getX())))
-				sideLength = (sizeMap.get(categoryKey).getX()) / Math.abs(Math.cos(angle));
+					size.getY() / size.getX())))
+				sideLength = (size.getX()) / Math.abs(Math.cos(angle));
 			else
-				sideLength = (sizeMap.get(categoryKey).getY()) / Math.abs(Math.sin(angle));
+				sideLength = (size.getY()) / Math.abs(Math.sin(angle));
 		}
 		else {
-			if(Math.abs(Math.tan(angle)) <= 0.0005 || (Math.abs(Math.cos(angle)) >= 0.0005 && (Math.abs(Math.tan(angle)) <= nodeView.getVisualProperty(
+			if(Math.abs(Math.tan(angle)) <= 0.0005 || 
+			   (Math.abs(Math.cos(angle)) >= 0.0005 && 
+					(Math.abs(Math.tan(angle)) <= nodeView.getVisualProperty(
 					BasicVisualLexicon.NODE_HEIGHT) / nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH)))) 
 				sideLength = (nodeView.getVisualProperty(BasicVisualLexicon.NODE_WIDTH) / 2) / Math.abs(Math.cos(angle));
 			else
@@ -157,9 +163,9 @@ public class PolyLayoutAlgorithm {
 		return sideLength;
 	}
 
-	private static void doShape(Map<Object, List<View<CyNode>>> nodeMap, Map<Object, Point2D> sizeMap, 
-			Object categoryKey, Double maxSideLength, final Double spacing, Double angle, 
-			List<Point2D> criticalPoints, final int quadraint) {		
+	private static void doShape(List<View<CyNode>> viewList, Point2D size, 
+	                            Double maxSideLength, final Double spacing, Double angle, 
+	                            List<Point2D> criticalPoints, final int quadraint) {		
 		double x = 0.0;
 		double y = 0.0;
 		if(criticalPoints.size() > 0) {
@@ -174,14 +180,14 @@ public class PolyLayoutAlgorithm {
 		if(quadraint == 3 || quadraint == 4)
 			yCompAngle *= -1;
 		
-		double differenceSpacing = getDifferenceInSpacing(sizeMap, nodeMap, maxSideLength, categoryKey, angle, spacing);
+		double differenceSpacing = getDifferenceInSpacing(size, viewList, maxSideLength, angle, spacing);
 		double changeVector = spacing + differenceSpacing;
 
 		x = x + (3 * spacing) * xCompAngle;
 		y = y + (3 * spacing) * yCompAngle;
 
-		for(View<CyNode> nodeView : nodeMap.get(categoryKey)) {
-			double nodeDiagonalDistance = getSideLength(sizeMap, categoryKey, angle, nodeView);
+		for(View<CyNode> nodeView : viewList) {
+			double nodeDiagonalDistance = getSideLength(size, angle, nodeView);
 			
 			x += (changeVector + nodeDiagonalDistance) * xCompAngle;
 			y += (changeVector + nodeDiagonalDistance) * yCompAngle;

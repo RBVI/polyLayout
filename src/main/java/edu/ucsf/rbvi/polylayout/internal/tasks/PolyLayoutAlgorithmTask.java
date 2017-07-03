@@ -32,7 +32,7 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 	private CyNetworkViewManager nVM;
 	private final PolyLayoutContext context;
 	private final String categoryColumn;
-	private final Set<View<CyNode>> nodesToLayout;
+	private final Collection<View<CyNode>> nodesToLayout;
 
 	public PolyLayoutAlgorithmTask(final CyServiceRegistrar reg, final String displayName,
 	                               final PolyLayoutContext context,
@@ -44,7 +44,11 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 		this.network = view.getModel();
 		this.context = context;
 		this.categoryColumn = categoryColumn;
-		this.nodesToLayout = nodesToLayOut;
+		if (nodesToLayOut == null || nodesToLayOut.size() == 0) {
+			this.nodesToLayout = view.getNodeViews();
+		} else {
+			this.nodesToLayout = nodesToLayOut;
+		}
 	}
 
 	@Override
@@ -53,7 +57,6 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 			taskMonitor.showMessage(TaskMonitor.Level.ERROR, "Must select a column for categories");
 			return;
 		}
-		String columnName = categoryColumn;
 		double spacing = context.spacing;
 		String sortColumn = null;
 		if (context.sortColumn != null && !context.sortColumn.getSelectedValue().equals("--None--"))
@@ -64,7 +67,7 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 		for (View<CyNode> nv: nodesToLayout) {
 			CyNode node = nv.getModel();
 			
-			Object cat = network.getRow(node).getRaw(columnName);
+			Object cat = network.getRow(node).getRaw(categoryColumn);
 			if(!nodeMap.containsKey(cat)) 
 				nodeMap.put(cat, new ArrayList<View<CyNode>>());
 			nodeMap.get(cat).add(nv);
