@@ -68,10 +68,6 @@ public class PolyLayoutContext implements SetCurrentNetworkListener
 
 		// Now sort the list
 		Collections.sort(columnNames);
-		// category = new ListSingleSelection<String>(columnNames);
-		// List<String> sortNames = new ArrayList<String>();
-		// sortNames.add("--None--");
-		// sortNames.addAll(columnNames);
 		columnNames.add(0, "--None--");
 		sortColumn = new ListSingleSelection<String>(columnNames);
 
@@ -80,5 +76,4 @@ public class PolyLayoutContext implements SetCurrentNetworkListener
 	public void handleEvent(SetCurrentNetworkEvent ev) {
 		setColumnTunables(ev.getNetwork());
 	}
-
 }

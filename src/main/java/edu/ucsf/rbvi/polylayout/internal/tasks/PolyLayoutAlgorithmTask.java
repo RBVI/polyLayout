@@ -27,9 +27,7 @@ import org.cytoscape.model.subnetwork.CyRootNetwork;
 
 public class PolyLayoutAlgorithmTask extends AbstractLayoutTask 
 {
-	private final CyServiceRegistrar reg;
 	private final CyNetwork network;
-	private CyNetworkViewManager nVM;
 	private final PolyLayoutContext context;
 	private final String categoryColumn;
 	private final Collection<View<CyNode>> nodesToLayout;
@@ -40,7 +38,6 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 																 final String categoryColumn, UndoSupport undo)
 	{
 		super(displayName, view, nodesToLayOut, categoryColumn, undo);
-		this.reg = reg;
 		this.network = view.getModel();
 		this.context = context;
 		this.categoryColumn = categoryColumn;
@@ -64,7 +61,7 @@ public class PolyLayoutAlgorithmTask extends AbstractLayoutTask
 		
 		Map<Object, List<View<CyNode>>> nodeMap = new HashMap<Object,List<View<CyNode>>>();
 		
-		for (View<CyNode> nv: nodesToLayout) {
+		for (View<CyNode> nv : nodesToLayout) {
 			CyNode node = nv.getModel();
 			
 			Object cat = network.getRow(node).getRaw(categoryColumn);
