@@ -20,6 +20,12 @@ class ColumnSort implements Comparator<View<CyNode>> {
 	public int compare(View<CyNode> v1, View<CyNode> v2) {
 		Object o1 = network.getRow(v1.getModel()).getRaw(sortColumn);
 		Object o2 = network.getRow(v2.getModel()).getRaw(sortColumn);
+
+		// Deal with null data
+		if (o1 == null && o2 == null) return 0;
+		if (o1 == null) return -1;
+		if (o2 == null) return 1;
+
 		if (o1 instanceof Double)
 			return ((Double)o1).compareTo((Double)o2);
 		else if (o1 instanceof Integer)
