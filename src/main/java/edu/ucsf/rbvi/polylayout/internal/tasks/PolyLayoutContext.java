@@ -74,6 +74,7 @@ public class PolyLayoutContext implements SetCurrentNetworkListener
 	}
 
 	public void handleEvent(SetCurrentNetworkEvent ev) {
-		setColumnTunables(ev.getNetwork());
+		if (ev.getNetwork() != null)
+			setColumnTunables(ev.getNetwork());
 	}
 }
